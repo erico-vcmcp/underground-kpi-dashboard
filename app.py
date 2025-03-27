@@ -28,6 +28,7 @@ material_options = ["Ore", "Waste"]
 
 # === Dash App ===
 app = dash.Dash(__name__)
+server = app.server  # <-- Needed for Render
 
 app.layout = html.Div([
     html.H1("Underground Mining KPI Dashboard", style={"textAlign": "center"}),
@@ -69,22 +70,18 @@ def update_dashboard(selected_months, selected_materials):
     filtered = df[df["MonthYear"].isin(selected_months)]
 
     if filtered.empty:
-        return html.Div("⚠️ No data available for the selected filters."), html.Div()
+        return html.Div("\u26a0\ufe0f No data available for the selected filters."), html.Div()
 
-    # Prepare grouped data for charts
     grouped = filtered.copy()
     grouped["MonthLabel"] = grouped["Date"].dt.strftime("%b %Y")
     grouped_daily = grouped.groupby(["Date", "MonthLabel"]).sum(numeric_only=True).reset_index()
 
-    # NEW: Proper average daily meters per month
     daily_totals = grouped.groupby(["Date", "MonthLabel"])["Equivalent Advance (m)"].sum().reset_index()
     monthly_avg = daily_totals.groupby("MonthLabel")["Equivalent Advance (m)"].mean().reset_index()
 
-    # Rolling average for Meters Advanced
     rolling = grouped_daily[["Date", "Equivalent Advance (m)"]].copy()
     rolling["Rolling 30-Day Avg"] = rolling["Equivalent Advance (m)"].rolling(window=30).mean()
 
-    # KPI totals
     show_ore = "Ore" in selected_materials
     show_waste = "Waste" in selected_materials
 
@@ -100,7 +97,6 @@ def update_dashboard(selected_months, selected_materials):
         total_waste = grouped["Total Waste Hauled Tonnes"].sum()
         total_haul += total_waste
 
-    # === KPI Cards ===
     def kpi_card(label, value):
         return html.Div([
             html.H3(label),
@@ -115,17 +111,14 @@ def update_dashboard(selected_months, selected_materials):
         })
 
     kpis = [
-        kpi_card("📅 Selected Months", ", ".join(selected_months)),
-        kpi_card("🪨 Selected Materials", ", ".join(selected_materials)),
-        kpi_card("🚛 Total Hauled Tonnes", total_haul),
-        kpi_card("🟢 Ore Hauled", total_ore),
-        kpi_card("🟤 Waste Hauled", total_waste),
-        kpi_card("📏 Equivalent Advance (m)", total_advance)
+        kpi_card("\ud83d\udcc5 Selected Months", ", ".join(selected_months)),
+        kpi_card("\ud83e\udea8 Selected Materials", ", ".join(selected_materials)),
+        kpi_card("\ud83d\ude9b Total Hauled Tonnes", total_haul),
+        kpi_card("\ud83d\udfe2 Ore Hauled", total_ore),
+        kpi_card("\ud83d\udfe4 Waste Hauled", total_waste),
+        kpi_card("\ud83d\udccf Equivalent Advance (m)", total_advance)
     ]
 
-    # === Charts ===
-
-    # Total Hauled Tonnes Chart
     haul_chart = px.bar(
         grouped_daily,
         x="Date",
@@ -135,7 +128,6 @@ def update_dashboard(selected_months, selected_materials):
         labels={"Date": "Date", "Total Hauled Tonnes": "Tonnes", "MonthLabel": "Month"}
     )
 
-    # Ore vs Waste Chart
     material_chart_data = []
     if show_ore:
         material_chart_data.append(("Ore Hauled", total_ore))
@@ -149,7 +141,6 @@ def update_dashboard(selected_months, selected_materials):
         title="Ore vs Waste Hauled"
     )
 
-    # Meters Advanced Chart with Rolling Average
     advance_fig = px.bar(
         grouped_daily,
         x="Date",
@@ -166,7 +157,6 @@ def update_dashboard(selected_months, selected_materials):
         line=dict(color="black", dash="dot")
     )
 
-    # Average Daily Meters per Month (New)
     monthly_avg_chart = px.bar(
         monthly_avg,
         x="MonthLabel",
@@ -186,7 +176,5 @@ def update_dashboard(selected_months, selected_materials):
     return kpis, charts
 
 # === Run App ===
-server = app.server  # 👈 Add this line above
-
 if __name__ == '__main__':
     app.run(debug=True)
