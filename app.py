@@ -28,7 +28,7 @@ material_options = ["Ore", "Waste"]
 
 # === Dash App ===
 app = dash.Dash(__name__)
-server = app.server  # <-- Needed for Render
+server = app.server  # Required for Render
 
 app.layout = html.Div([
     html.H1("Underground Mining KPI Dashboard", style={"textAlign": "center"}),
@@ -176,6 +176,5 @@ def update_dashboard(selected_months, selected_materials):
     return kpis, charts
 
 # === Run App ===
-server = app.server
 if __name__ == '__main__':
     app.run(debug=True)
