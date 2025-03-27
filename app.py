@@ -176,5 +176,6 @@ def update_dashboard(selected_months, selected_materials):
     return kpis, charts
 
 # === Run App ===
+server = app.server
 if __name__ == '__main__':
     app.run(debug=True)
