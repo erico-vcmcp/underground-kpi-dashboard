@@ -31,7 +31,7 @@ app = dash.Dash(__name__)
 server = app.server  # Required for Render
 
 app.layout = html.Div([
-    html.H1("Underground Mining KPI Dashboard", style={"textAlign": "center"}),
+    html.H1("Underground Mining KPI Dashboard (v1.0)", style={"textAlign": "center"}),
 
     html.Div([
         html.Div([
